@@ -15,6 +15,7 @@ export interface SkillMetrics {
 export interface User {
   id: string;
   name: string;
+  email: string; // Added email field
   role: UserRole;
   avatar: string;
   totalCredits: number;

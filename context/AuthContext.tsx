@@ -1,12 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import { auth, googleProvider } from '../firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  signInWithPopup,
+  sendEmailVerification,
+  User as FirebaseUser
+} from 'firebase/auth';
 import { CURRENT_USER } from '../constants';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string) => Promise<void>;
-  signup: (name: string, email: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  googleSignIn: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -18,46 +29,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('skillforge_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // Map Firebase user to our User type
+        const userToSet: User = {
+          ...CURRENT_USER, // Keep other mock data for now
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || 'User',
+          email: firebaseUser.email || '',
+        };
+        setUser(userToSet);
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string) => {
-    // Simulating API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        // In a real app, validate credentials here.
-        // We just use the mock user but maybe update the ID/Name to pretend it's dynamic
-        const userToSet = { ...CURRENT_USER, id: email }; 
-        setUser(userToSet);
-        localStorage.setItem('skillforge_user', JSON.stringify(userToSet));
-        resolve();
-      }, 800);
-    });
+  const login = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signup = async (name: string, email: string) => {
-    // Simulating API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        const userToSet = { ...CURRENT_USER, name, id: email };
-        setUser(userToSet);
-        localStorage.setItem('skillforge_user', JSON.stringify(userToSet));
-        resolve();
-      }, 800);
-    });
+  const signup = async (name: string, email: string, password: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Send verification email
+    await sendEmailVerification(userCredential.user);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('skillforge_user');
+  const googleSignIn = async () => {
+    await signInWithPopup(auth, googleProvider);
+  };
+
+  const logout = async () => {
+    await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, googleSignIn, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
