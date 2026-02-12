@@ -29,6 +29,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      console.error("Firebase Auth is not initialized. Check your environment variables.");
+      setIsLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         // Map Firebase user to our User type
@@ -49,20 +55,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized");
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signup = async (name: string, email: string, password: string) => {
+    if (!auth) throw new Error("Firebase Auth is not initialized");
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     // Send verification email
     await sendEmailVerification(userCredential.user);
   };
 
   const googleSignIn = async () => {
+    if (!auth) throw new Error("Firebase Auth is not initialized");
     await signInWithPopup(auth, googleProvider);
   };
 
   const logout = async () => {
+    if (!auth) throw new Error("Firebase Auth is not initialized");
     await signOut(auth);
   };
 
