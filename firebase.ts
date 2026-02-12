@@ -13,11 +13,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-console.log("Firebase Config:", {
-  apiKey: firebaseConfig.apiKey,
-  projectId: firebaseConfig.projectId,
-  authDomain: firebaseConfig.authDomain
+console.log("Firebase Env Check:", {
+  apiKeyRaw: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomainRaw: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
 });
+
+console.log("Final Config API Key:", "'" + firebaseConfig.apiKey + "'"); // Quote to see whitespace
 
 let app;
 let auth: Auth;
