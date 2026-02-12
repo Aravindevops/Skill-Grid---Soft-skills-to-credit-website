@@ -18,8 +18,13 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err) {
-      setError('Failed to log in. Please check your credentials.');
+    } catch (err: any) {
+      // Check if it's an email verification error
+      if (err.message && err.message.includes('verify your email')) {
+        setError(err.message);
+      } else {
+        setError('Failed to log in. Please check your credentials.');
+      }
       console.error(err);
     }
     setIsSubmitting(false);

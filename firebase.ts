@@ -3,22 +3,21 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 import { getAnalytics, Analytics } from "firebase/analytics";
 
+// TEMPORARY: Hardcoded config for debugging
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyClFblVhaSPMWTXZTMisxxwkYrcg6iCkYI",
+  authDomain: "skillgrid-b9ded.firebaseapp.com",
+  projectId: "skillgrid-b9ded",
+  storageBucket: "skillgrid-b9ded.firebasestorage.app",
+  messagingSenderId: "297728445074",
+  appId: "1:297728445074:web:acbb23e535c82f94f4344b",
+  measurementId: "G-RQFXMZ2T4J"
 };
 
-console.log("Firebase Env Check:", {
-  apiKeyRaw: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomainRaw: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
+console.log("Firebase Config (Hardcoded):", {
+  apiKey: firebaseConfig.apiKey?.substring(0, 10) + "...",
+  projectId: firebaseConfig.projectId
 });
-
-console.log("Final Config API Key:", "'" + firebaseConfig.apiKey + "'"); // Quote to see whitespace
 
 let app;
 let auth: Auth;
@@ -30,6 +29,7 @@ try {
   auth = getAuth(app);
   googleProvider = new GoogleAuthProvider();
   analytics = getAnalytics(app);
+  console.log("Firebase initialized successfully!");
 } catch (error) {
   console.error("Firebase initialization failed:", error);
 }

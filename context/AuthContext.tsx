@@ -56,7 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     if (!auth) throw new Error("Firebase Auth is not initialized");
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    // Check if email is verified
+    if (!userCredential.user.emailVerified) {
+      // Sign out the user immediately
+      await signOut(auth);
+      throw new Error("Please verify your email before logging in. Check your inbox for the verification link.");
+    }
   };
 
   const signup = async (name: string, email: string, password: string) => {
