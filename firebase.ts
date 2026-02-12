@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
+import { getAnalytics, Analytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,7 +19,18 @@ console.log("Firebase Config:", {
   authDomain: firebaseConfig.authDomain
 });
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const analytics = getAnalytics(app);
+let app;
+let auth: Auth;
+let googleProvider: GoogleAuthProvider;
+let analytics: Analytics;
+
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  analytics = getAnalytics(app);
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+}
+
+export { auth, googleProvider, analytics };
