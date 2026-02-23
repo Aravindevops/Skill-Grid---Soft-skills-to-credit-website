@@ -7,10 +7,12 @@ import {
   signOut,
   onAuthStateChanged,
   signInWithPopup,
+  updateProfile,
   sendEmailVerification,
   User as FirebaseUser
 } from 'firebase/auth';
 import { CURRENT_USER } from '../constants';
+import { createUserProfile } from '../services/userService';
 
 interface AuthContextType {
   user: User | null;
@@ -37,9 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // Map Firebase user to our User type
         const userToSet: User = {
-          ...CURRENT_USER, // Keep other mock data for now
+          ...CURRENT_USER,
           id: firebaseUser.uid,
           name: firebaseUser.displayName || 'User',
           email: firebaseUser.email || '',
@@ -58,9 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!auth) throw new Error("Firebase Auth is not initialized");
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    // Check if email is verified
     if (!userCredential.user.emailVerified) {
-      // Sign out the user immediately
       await signOut(auth);
       throw new Error("Please verify your email before logging in. Check your inbox for the verification link.");
     }
@@ -69,13 +68,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string) => {
     if (!auth) throw new Error("Firebase Auth is not initialized");
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Set the display name immediately
+    await updateProfile(userCredential.user, { displayName: name });
+    // Create Firestore profile
+    await createUserProfile(userCredential.user.uid, name, email, '');
     // Send verification email
     await sendEmailVerification(userCredential.user);
   };
 
   const googleSignIn = async () => {
     if (!auth) throw new Error("Firebase Auth is not initialized");
-    await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    const { uid, displayName, email, photoURL } = result.user;
+    // Create Firestore profile if first time (createUserProfile is idempotent)
+    await createUserProfile(uid, displayName || 'User', email || '', photoURL || '');
   };
 
   const logout = async () => {

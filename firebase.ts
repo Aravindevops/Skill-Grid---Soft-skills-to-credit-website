@@ -2,8 +2,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 import { getAnalytics, Analytics } from "firebase/analytics";
+import { getFirestore, Firestore } from "firebase/firestore";
 
-// TEMPORARY: Hardcoded config for debugging
 const firebaseConfig = {
   apiKey: "AIzaSyClFblVhaSPMWTXZTMisxxwkYrcg6iCkYI",
   authDomain: "skillgrid-b9ded.firebaseapp.com",
@@ -14,24 +14,21 @@ const firebaseConfig = {
   measurementId: "G-RQFXMZ2T4J"
 };
 
-console.log("Firebase Config (Hardcoded):", {
-  apiKey: firebaseConfig.apiKey?.substring(0, 10) + "...",
-  projectId: firebaseConfig.projectId
-});
-
 let app;
 let auth: Auth;
 let googleProvider: GoogleAuthProvider;
 let analytics: Analytics;
+let db: Firestore;
 
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   googleProvider = new GoogleAuthProvider();
   analytics = getAnalytics(app);
+  db = getFirestore(app);
   console.log("Firebase initialized successfully!");
 } catch (error) {
   console.error("Firebase initialization failed:", error);
 }
 
-export { auth, googleProvider, analytics };
+export { auth, googleProvider, analytics, db };

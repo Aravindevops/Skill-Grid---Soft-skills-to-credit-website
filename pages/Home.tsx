@@ -1,10 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CURRENT_USER, EVENTS } from '../constants';
+import { EVENTS } from '../constants';
+import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
+import { getUserEvents } from '../services/eventService';
+import { Event } from '../types';
 import { Calendar, CheckCircle, ArrowRight, Activity, Award } from 'lucide-react';
 
 const Home: React.FC = () => {
+  const { userProfile, isLoadingProfile } = useUser();
+  const { user } = useAuth();
+  const [userEvents, setUserEvents] = useState<Event[]>([]);
   const upcomingEvents = EVENTS.filter(e => e.status === 'Upcoming');
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getUserEvents(user.id).then(setUserEvents).catch(console.error);
+  }, [user?.id]);
+
+  const completedCount = userEvents.filter(e => e.status === 'Verified' || e.status === 'Completed').length;
+
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  const displayName = userProfile?.name || user?.name || 'Student';
+  const totalCredits = userProfile?.totalCredits ?? 0;
+  const rank = userProfile?.rank ?? 0;
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -12,15 +38,16 @@ const Home: React.FC = () => {
       <section className="bg-indigo-700 dark:bg-indigo-900 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden transition-colors duration-300">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400 opacity-10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
-        
+
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
             <h1 className="text-3xl md:text-5xl font-bold mb-4">
-              Welcome back, {CURRENT_USER.name}!
+              Welcome back, {displayName}!
             </h1>
             <p className="text-indigo-100 text-lg max-w-2xl mb-8">
-              You are currently ranked <span className="font-bold text-amber-300">#{CURRENT_USER.rank}</span> on the leaderboard. 
-              Keep participating in events to boost your Leadership and Technical scores.
+              {rank > 0
+                ? <>You are currently ranked <span className="font-bold text-amber-300">#{rank}</span> on the leaderboard. Keep participating in events to boost your scores!</>
+                : 'Start participating in events to earn credits and climb the leaderboard!'}
             </p>
             <div className="flex gap-4">
               <Link to="/portfolio" className="bg-white text-indigo-700 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-gray-50 transition">
@@ -31,13 +58,13 @@ const Home: React.FC = () => {
               </Link>
             </div>
           </div>
-          
+
           <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 min-w-[200px] text-center">
             <p className="text-sm font-medium text-indigo-200 mb-1">Total Credits</p>
-            <div className="text-5xl font-black tracking-tight">{CURRENT_USER.totalCredits}</div>
+            <div className="text-5xl font-black tracking-tight">{totalCredits.toLocaleString()}</div>
             <div className="text-xs text-indigo-200 mt-2 flex items-center justify-center gap-1">
               <Activity size={12} />
-              <span>+150 this month</span>
+              <span>{completedCount} events completed</span>
             </div>
           </div>
         </div>
@@ -45,10 +72,10 @@ const Home: React.FC = () => {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Left Col - Stats & Quick Actions */}
         <div className="lg:col-span-2 space-y-8">
-          
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-start gap-4 hover:shadow-md transition duration-200">
@@ -57,17 +84,17 @@ const Home: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium">Events Completed</h3>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white">12</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">{completedCount}</p>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-start gap-4 hover:shadow-md transition duration-200">
               <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl text-blue-600 dark:text-blue-400">
                 <Award size={24} />
               </div>
               <div>
-                <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium">Badges Earned</h3>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white">5</p>
+                <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium">Current Rank</h3>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">{rank > 0 ? `#${rank}` : '—'}</p>
               </div>
             </div>
           </div>
@@ -113,45 +140,51 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col - Notifications/Updates */}
+        {/* Right Col */}
         <div className="space-y-6">
-           <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 text-white shadow-lg border dark:border-slate-700">
-             <h3 className="font-bold text-lg mb-4">Faculty Updates</h3>
-             <ul className="space-y-4">
-               <li className="flex gap-3 text-sm">
-                 <div className="w-2 h-2 mt-1.5 rounded-full bg-green-400 flex-shrink-0"></div>
-                 <p className="text-gray-300">Prof. Dumbledore validated your participation in "Advanced Alchemy". <span className="text-green-400 font-bold">+50 pts</span></p>
-               </li>
-               <li className="flex gap-3 text-sm">
-                 <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-400 flex-shrink-0"></div>
-                 <p className="text-gray-300">New Hackathon announced! Check out "Codefest 2024".</p>
-               </li>
-               <li className="flex gap-3 text-sm">
-                 <div className="w-2 h-2 mt-1.5 rounded-full bg-amber-400 flex-shrink-0"></div>
-                 <p className="text-gray-300">Your Leadership score is in the top 10% of students!</p>
-               </li>
-             </ul>
-           </div>
-           
-           {/* Mini Store Preview */}
-           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
-             <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-800 dark:text-white">Rewards</h3>
-                 <Link to="/rewards" className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">See All</Link>
-             </div>
-             <div className="space-y-4">
-                 <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden">
-                         <img src="https://picsum.photos/id/18/100/100" className="w-full h-full object-cover" />
-                     </div>
-                     <div>
-                         <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Uni Hoodie</p>
-                         <p className="text-xs text-gray-500 dark:text-slate-400">500 Credits</p>
-                     </div>
-                     <button className="ml-auto text-xs bg-gray-900 dark:bg-slate-700 text-white dark:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-slate-600 transition">View</button>
-                 </div>
-             </div>
-           </div>
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 text-white shadow-lg border dark:border-slate-700">
+            <h3 className="font-bold text-lg mb-4">My Skills Overview</h3>
+            {userProfile?.skills ? (
+              <ul className="space-y-3">
+                {Object.entries(userProfile.skills).map(([skill, value]) => (
+                  <li key={skill}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="capitalize text-gray-300">{skill}</span>
+                      <span className="font-bold text-white">{value}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                      <div
+                        className="bg-indigo-400 h-1.5 rounded-full transition-all duration-700"
+                        style={{ width: `${value}%` }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-sm">Complete events to earn skill points!</p>
+            )}
+          </div>
+
+          {/* Mini Store Preview */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-gray-800 dark:text-white">Rewards</h3>
+              <Link to="/rewards" className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">See All</Link>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden">
+                  <img src="https://picsum.photos/id/18/100/100" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Uni Hoodie</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">500 Credits</p>
+                </div>
+                <Link to="/rewards" className="ml-auto text-xs bg-gray-900 dark:bg-slate-700 text-white dark:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-slate-600 transition">View</Link>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

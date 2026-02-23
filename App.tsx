@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UserProvider } from './context/UserContext';
 
 const About = () => <div className="p-8 text-center text-gray-600 dark:text-gray-400">About Page Placeholder</div>;
 const Contact = () => <div className="p-8 text-center text-gray-600 dark:text-gray-400">Contact Page Placeholder</div>;
@@ -22,12 +23,12 @@ const PrivateLayout = () => {
   }
 
   return isAuthenticated ? (
-    <>
+    <UserProvider>
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
-    </>
+    </UserProvider>
   ) : (
     <Navigate to="/login" replace />
   );
@@ -41,9 +42,9 @@ const PublicLayout = () => {
     return <div className="min-h-screen flex items-center justify-center dark:bg-slate-950 dark:text-white">Loading...</div>;
   }
 
-  // If already logged in, redirect to home
   return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 };
+
 function App() {
   return (
     <AuthProvider>
