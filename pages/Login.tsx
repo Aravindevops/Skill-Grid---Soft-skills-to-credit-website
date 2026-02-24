@@ -125,6 +125,11 @@ const Login: React.FC = () => {
             Sign up
           </Link>
         </div>
+        <div className="mt-3 text-center">
+          <Link to="/faculty/login" className="text-xs text-gray-400 dark:text-slate-600 hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+            Faculty? Sign in here →
+          </Link>
+        </div>
       </div>
     </div>
   );

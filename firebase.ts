@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 import { getAnalytics, Analytics } from "firebase/analytics";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyClFblVhaSPMWTXZTMisxxwkYrcg6iCkYI",
@@ -19,6 +20,7 @@ let auth: Auth;
 let googleProvider: GoogleAuthProvider;
 let analytics: Analytics;
 let db: Firestore;
+let storage: FirebaseStorage;
 
 try {
   app = initializeApp(firebaseConfig);
@@ -26,9 +28,10 @@ try {
   googleProvider = new GoogleAuthProvider();
   analytics = getAnalytics(app);
   db = getFirestore(app);
+  storage = getStorage(app);
   console.log("Firebase initialized successfully!");
 } catch (error) {
   console.error("Firebase initialization failed:", error);
 }
 
-export { auth, googleProvider, analytics, db };
+export { auth, googleProvider, analytics, db, storage };

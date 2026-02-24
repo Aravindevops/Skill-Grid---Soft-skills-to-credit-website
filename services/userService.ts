@@ -9,6 +9,7 @@ import {
     limit,
     getDocs,
     serverTimestamp,
+    where,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { UserRole, SkillMetrics } from '../types';
@@ -33,7 +34,7 @@ const DEFAULT_SKILLS: SkillMetrics = {
     communication: 0,
 };
 
-/** Creates a user profile document if it doesn't already exist */
+/** Creates a student profile document if it doesn't already exist */
 export const createUserProfile = async (
     uid: string,
     name: string,
@@ -42,13 +43,34 @@ export const createUserProfile = async (
 ): Promise<void> => {
     const userRef = doc(db, 'users', uid);
     const snap = await getDoc(userRef);
-
     if (!snap.exists()) {
         await setDoc(userRef, {
             name,
             email,
             avatar,
             role: UserRole.STUDENT,
+            totalCredits: 0,
+            rank: 0,
+            skills: DEFAULT_SKILLS,
+            createdAt: serverTimestamp(),
+        });
+    }
+};
+
+/** Creates a faculty profile document if it doesn't already exist */
+export const createFacultyProfile = async (
+    uid: string,
+    name: string,
+    email: string
+): Promise<void> => {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+        await setDoc(userRef, {
+            name,
+            email,
+            avatar: '',
+            role: UserRole.FACULTY,
             totalCredits: 0,
             rank: 0,
             skills: DEFAULT_SKILLS,
@@ -77,12 +99,19 @@ export const updateUserProfile = async (
 /** Fetches top N users by totalCredits for the leaderboard */
 export const getLeaderboard = async (topN: number = 20): Promise<UserProfile[]> => {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('totalCredits', 'desc'), limit(topN));
+    const q = query(usersRef, where('role', '==', UserRole.STUDENT), orderBy('totalCredits', 'desc'), limit(topN));
     const snap = await getDocs(q);
-
     return snap.docs.map((d, index) => ({
         id: d.id,
         ...(d.data() as Omit<UserProfile, 'id'>),
         rank: index + 1,
     }));
+};
+
+/** Fetches all students */
+export const getAllStudents = async (): Promise<UserProfile[]> => {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('role', '==', UserRole.STUDENT), orderBy('name'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<UserProfile, 'id'>) }));
 };

@@ -1,22 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { EVENTS } from '../constants';
 import { useUser } from '../context/UserContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserEvents } from '../services/eventService';
-import { Event } from '../types';
-import { Calendar, CheckCircle, ArrowRight, Activity, Award } from 'lucide-react';
+import { getUserEvents, getAllEvents, registerForEvent } from '../services/eventService';
+import { getAllRewards } from '../services/facultyService';
+import { Event, Reward } from '../types';
+import { Calendar, CheckCircle, ArrowRight, Activity, Award, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { userProfile, isLoadingProfile } = useUser();
   const { user } = useAuth();
   const [userEvents, setUserEvents] = useState<Event[]>([]);
-  const upcomingEvents = EVENTS.filter(e => e.status === 'Upcoming');
+  const [globalEvents, setGlobalEvents] = useState<Event[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [registering, setRegistering] = useState<string | null>(null);
+  const upcomingEvents = globalEvents.filter(e => e.status === 'Upcoming');
 
   useEffect(() => {
+    getAllEvents().then(setGlobalEvents).catch(console.error);
+    getAllRewards().then(setRewards).catch(console.error);
     if (!user?.id) return;
     getUserEvents(user.id).then(setUserEvents).catch(console.error);
   }, [user?.id]);
+
+  const handleRegister = async (event: Event) => {
+    if (!user?.id) return;
+    setRegistering(event.id);
+    try {
+      await registerForEvent(user.id, event);
+      // Immediately reflect it in the UI as pending verification
+      setUserEvents(prev => [{ ...event, status: 'Upcoming' }, ...prev]);
+      alert(`Successfully registered for ${event.title}! Waiting for faculty verification.`);
+    } catch (error) {
+      console.error('Error registering:', error);
+      alert('Failed to register for event.');
+    } finally {
+      setRegistering(null);
+    }
+  };
 
   const completedCount = userEvents.filter(e => e.status === 'Verified' || e.status === 'Completed').length;
 
@@ -129,9 +150,21 @@ const Home: React.FC = () => {
                         <Calendar size={14} />
                         {new Date(event.date).toLocaleDateString()}
                       </div>
-                      <button className="ml-auto flex items-center gap-1 text-gray-900 dark:text-slate-200 font-medium border border-gray-300 dark:border-slate-600 px-3 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-                        Register <ArrowRight size={14} />
-                      </button>
+
+                      {/* Check if user already registered */}
+                      {userEvents.some(ue => ue.id === event.id) ? (
+                        <div className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 text-sm font-bold border border-emerald-200 dark:border-emerald-800/30">
+                          <CheckCircle size={14} /> Registered & Pending
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleRegister(event)}
+                          disabled={registering === event.id}
+                          className="ml-auto flex items-center gap-1.5 text-white font-bold bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded-lg transition disabled:opacity-50 shadow-md shadow-indigo-600/20"
+                        >
+                          {registering === event.id ? <Loader2 size={14} className="animate-spin" /> : 'Register'} <ArrowRight size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -173,16 +206,22 @@ const Home: React.FC = () => {
               <Link to="/rewards" className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">See All</Link>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden">
-                  <img src="https://picsum.photos/id/18/100/100" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-gray-800 dark:text-slate-100">Uni Hoodie</p>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">500 Credits</p>
-                </div>
-                <Link to="/rewards" className="ml-auto text-xs bg-gray-900 dark:bg-slate-700 text-white dark:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-slate-600 transition">View</Link>
-              </div>
+              {rewards.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-slate-400">Loading rewards...</p>
+              ) : (
+                rewards.slice(0, 3).map(reward => (
+                  <div key={reward.id} className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
+                      <img src={reward.image || `https://picsum.photos/seed/${reward.id}/100`} alt={reward.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800 dark:text-slate-100 line-clamp-1">{reward.name}</p>
+                      <p className="text-xs text-amber-500 font-bold">{reward.cost} Credits</p>
+                    </div>
+                    <Link to="/rewards" className="ml-auto text-xs bg-gray-900 dark:bg-slate-700 text-white dark:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 dark:hover:bg-slate-600 transition">View</Link>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
