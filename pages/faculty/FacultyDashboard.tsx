@@ -57,7 +57,6 @@ const FacultyDashboard: React.FC = () => {
     const [allStudentEvents, setAllStudentEvents] = useState<StudentEventWithMeta[]>([]);
     const [loadingVerifications, setLoadingVerifications] = useState(false);
     const [verifyingId, setVerifyingId] = useState<string | null>(null);
-    const [selectedSkillForVerify, setSelectedSkillForVerify] = useState<Record<string, typeof SKILL_OPTIONS[number]>>({});
 
     useEffect(() => {
         if (user?.id) {
@@ -77,10 +76,16 @@ const FacultyDashboard: React.FC = () => {
             }
 
             if (currentStudents.length > 0) {
+                console.log("FacultyDashboard loadVerifications: Fetching events for students:", currentStudents.length);
                 const results = await Promise.all(
-                    currentStudents.map(s => getStudentEvents(s.id).then(evs => evs.map(e => ({ ...e, studentUid: s.id, studentName: s.name }))))
+                    currentStudents.map(s => getStudentEvents(s.id).then(evs => {
+                        console.log(`Events for ${s.name}:`, evs);
+                        return evs.map(e => ({ ...e, studentUid: s.id, studentName: s.name }));
+                    }))
                 );
-                setAllStudentEvents(results.flat().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()));
+                const flattened = results.flat().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+                console.log("FacultyDashboard loadVerifications: Final flattened events:", flattened);
+                setAllStudentEvents(flattened);
             }
         } catch (error) {
             console.error(error);
@@ -150,9 +155,8 @@ const FacultyDashboard: React.FC = () => {
     };
 
     const handleVerify = async (ev: StudentEventWithMeta) => {
-        const skill = selectedSkillForVerify[ev.id] || 'teamwork';
         setVerifyingId(ev.id);
-        await verifyStudentEvent(ev.studentUid, ev.id, ev.credits, skill);
+        await verifyStudentEvent(ev.studentUid, ev.id, ev.credits, ev.skills);
         setAllStudentEvents(prev => prev.map(e => e.id === ev.id ? { ...e, status: 'Verified' } : e));
         setVerifyingId(null);
     };
@@ -204,7 +208,7 @@ const FacultyDashboard: React.FC = () => {
         }
     };
 
-    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-700 bg-[#161B28] text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm";
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-[#161B28] text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm";
     const labelClass = "block text-xs font-bold text-slate-400 mb-2";
 
     const pointsUsed = Object.values(newEvent.skills).reduce((a: number, b: number) => a + b, 0);
@@ -215,7 +219,7 @@ const FacultyDashboard: React.FC = () => {
     const historyEvents = allStudentEvents.filter(e => e.status === 'Verified');
 
     return (
-        <div className="min-h-screen bg-[#0B0F19] text-slate-100 font-sans">
+        <div className="min-h-screen bg-[#0B0F19] text-slate-900 dark:text-slate-100 font-sans">
             <FacultyNavbar facultyName={facultyName} activeTab={activeTab} setActiveTab={setActiveTab} />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -224,19 +228,19 @@ const FacultyDashboard: React.FC = () => {
                 {activeTab === 'verifications' && (
                     <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl">
                         <div>
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight">Verification Requests</h2>
+                            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Verification Requests</h2>
                             <p className="text-slate-400 mt-2 text-lg">Approve or reject student participation claims.</p>
                         </div>
 
                         {loadingStudents || loadingVerifications ? (
-                            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-500" size={40} /></div>
+                            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-teal-500" size={40} /></div>
                         ) : (
                             <>
                                 {/* Pending */}
-                                <div className="bg-[#1C2130] border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-                                    <div className="px-6 py-5 border-b border-slate-800 flex items-center gap-3 bg-[#22283A]/50">
+                                <div className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+                                    <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-[#22283A]/50">
                                         <Clock size={22} className="text-amber-400" />
-                                        <h3 className="font-bold text-white text-lg">Pending Approvals ({pendingApprovals.length})</h3>
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">Pending Approvals ({pendingApprovals.length})</h3>
                                     </div>
 
                                     {pendingApprovals.length === 0 ? (
@@ -249,19 +253,11 @@ const FacultyDashboard: React.FC = () => {
                                                 <div key={ev.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#22283A]/30 transition">
                                                     <div>
                                                         <div className="flex items-center gap-3 mb-1">
-                                                            <span className="font-bold text-white text-lg">{ev.title}</span>
-                                                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">{ev.category}</span>
+                                                            <span className="font-bold text-slate-900 dark:text-white text-lg">{ev.title}</span>
+                                                            <span className="px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-xs font-bold border border-teal-500/20">{ev.category}</span>
                                                         </div>
                                                         <p className="text-slate-400 text-sm mb-3">Submitted by <span className="text-slate-300 font-semibold">{ev.studentName}</span></p>
                                                         <div className="flex items-center gap-3">
-                                                            <label className="text-xs font-bold text-slate-500">Boost Skill:</label>
-                                                            <select
-                                                                value={selectedSkillForVerify[ev.id] || 'teamwork'}
-                                                                onChange={e => setSelectedSkillForVerify(prev => ({ ...prev, [ev.id]: e.target.value as any }))}
-                                                                className="text-xs border border-slate-700 bg-[#161B28] text-white rounded-lg px-2 html py-1.5 focus:ring-1 focus:ring-indigo-500 outline-none"
-                                                            >
-                                                                {SKILL_OPTIONS.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-                                                            </select>
                                                             <span className="text-sm font-bold text-amber-500">+{ev.credits} pts</span>
                                                         </div>
                                                     </div>
@@ -276,7 +272,7 @@ const FacultyDashboard: React.FC = () => {
                                                         <button
                                                             onClick={() => handleVerify(ev)}
                                                             disabled={verifyingId === ev.id}
-                                                            className="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition disabled:opacity-50"
+                                                            className="flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-slate-900 dark:hover:text-white transition disabled:opacity-50"
                                                         >
                                                             {verifyingId === ev.id ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />} Verify
                                                         </button>
@@ -288,10 +284,10 @@ const FacultyDashboard: React.FC = () => {
                                 </div>
 
                                 {/* History */}
-                                <div className="bg-[#1C2130] border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-                                    <div className="px-6 py-5 border-b border-slate-800 flex items-center gap-3 bg-[#22283A]/50">
+                                <div className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+                                    <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 bg-[#22283A]/50">
                                         <History size={22} className="text-slate-400" />
-                                        <h3 className="font-bold text-white text-lg">History</h3>
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">History</h3>
                                     </div>
 
                                     {historyEvents.length === 0 ? (
@@ -303,7 +299,7 @@ const FacultyDashboard: React.FC = () => {
                                             {historyEvents.map(ev => (
                                                 <div key={ev.id} className="p-5 flex items-center justify-between gap-4">
                                                     <div>
-                                                        <p className="font-bold text-white">{ev.title}</p>
+                                                        <p className="font-bold text-slate-900 dark:text-white">{ev.title}</p>
                                                         <p className="text-xs text-slate-500 mt-1">{ev.studentName} • {ev.category}</p>
                                                     </div>
                                                     <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">Verified</span>
@@ -321,11 +317,11 @@ const FacultyDashboard: React.FC = () => {
                 {activeTab === 'create_event' && (
                     <div className="animate-in fade-in duration-500 max-w-4xl">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight">Create New Event</h2>
+                            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Create New Event</h2>
                             <p className="text-slate-400 mt-2 text-lg">Define event details and skill credit distribution.</p>
                         </div>
 
-                        <form onSubmit={handlePostEvent} className="bg-[#1C2130] border border-slate-800 rounded-2xl p-6 md:p-10 shadow-xl shadow-black/20">
+                        <form onSubmit={handlePostEvent} className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-10 shadow-xl shadow-black/20">
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
@@ -347,7 +343,7 @@ const FacultyDashboard: React.FC = () => {
 
                             <div className="mb-6">
                                 <label className={labelClass}>Event Image</label>
-                                <input type="file" accept="image/*" onChange={e => setNewEventImage(e.target.files?.[0] || null)} className={`${inputClass} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-slate-800 dark:file:text-slate-300 dark:hover:file:bg-slate-700 cursor-pointer`} />
+                                <input type="file" accept="image/*" onChange={e => setNewEventImage(e.target.files?.[0] || null)} className={`${inputClass} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 dark:file:bg-slate-800 dark:file:text-slate-300 dark:hover:file:bg-slate-700 cursor-pointer`} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -364,10 +360,10 @@ const FacultyDashboard: React.FC = () => {
                             </div>
 
                             {/* SKILL SPLIT */}
-                            <div className="pt-8 border-t border-slate-800">
+                            <div className="pt-8 border-t border-slate-200 dark:border-slate-800">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                                        <Layers size={22} className="text-indigo-400" />
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                        <Layers size={22} className="text-teal-400" />
                                         Skill Point Split
                                     </h3>
                                     <div className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-colors ${isSplitValid ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
@@ -381,12 +377,12 @@ const FacultyDashboard: React.FC = () => {
                                         <div key={skill}>
                                             <div className="flex justify-between items-end mb-3">
                                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{skill}</label>
-                                                <div className="bg-[#161B28] border border-slate-700 rounded-lg px-3 py-1 flex items-center">
+                                                <div className="bg-[#161B28] border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1 flex items-center">
                                                     <input
                                                         type="number" min="0" max={totalPoints}
                                                         value={newEvent.skills[skill]}
                                                         onChange={e => setNewEvent(p => ({ ...p, skills: { ...p.skills, [skill]: Number(e.target.value) } }))}
-                                                        className="w-12 bg-transparent text-white text-sm font-bold outline-none text-center"
+                                                        className="w-12 bg-transparent text-slate-900 dark:text-white text-sm font-bold outline-none text-center"
                                                     />
                                                 </div>
                                             </div>
@@ -394,13 +390,13 @@ const FacultyDashboard: React.FC = () => {
                                                 type="range" min="0" max={totalPoints}
                                                 value={newEvent.skills[skill]}
                                                 onChange={e => setNewEvent(p => ({ ...p, skills: { ...p.skills, [skill]: Number(e.target.value) } }))}
-                                                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500"
                                             />
                                         </div>
                                     ))}
                                 </div>
 
-                                <button type="submit" disabled={postingEvent || !isSplitValid} className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2">
+                                <button type="submit" disabled={postingEvent || !isSplitValid} className="w-full sm:w-auto px-8 py-3.5 bg-teal-600-white font-bold rounded-xl transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2">
                                     {postingEvent ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />} Create Event
                                 </button>
                             </div>
@@ -412,15 +408,15 @@ const FacultyDashboard: React.FC = () => {
                 {activeTab === 'rewards' && (
                     <div className="animate-in fade-in duration-500 max-w-6xl">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight">Reward Store Management</h2>
+                            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Reward Store Management</h2>
                             <p className="text-slate-400 mt-2 text-lg">Add new items and manage existing rewards for students.</p>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                             {/* Add Reward Form */}
                             <div className="lg:col-span-2">
-                                <form onSubmit={handleAddReward} className="bg-[#1C2130] border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/20 sticky top-28">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-3 mb-6">
+                                <form onSubmit={handleAddReward} className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/20 sticky top-28">
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 mb-6">
                                         <PlusSquare size={22} className="text-amber-400" />
                                         Add New Reward
                                     </h3>
@@ -463,37 +459,37 @@ const FacultyDashboard: React.FC = () => {
 
                             {/* Current Rewards List */}
                             <div className="lg:col-span-3">
-                                <div className="bg-[#1C2130] border border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-                                    <div className="px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-[#22283A]/50">
-                                        <h3 className="font-bold text-white text-lg flex items-center gap-3">
-                                            <ShoppingBag size={22} className="text-indigo-400" />
+                                <div className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+                                    <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-[#22283A]/50">
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-3">
+                                            <ShoppingBag size={22} className="text-teal-400" />
                                             Current Rewards
                                         </h3>
-                                        <span className="px-3 py-1 rounded-full bg-[#0B0F19] text-indigo-400 text-sm font-bold border border-slate-700">{rewards.length} Items</span>
+                                        <span className="px-3 py-1 rounded-full bg-[#0B0F19] text-teal-400 text-sm font-bold border border-slate-300 dark:border-slate-700">{rewards.length} Items</span>
                                     </div>
 
                                     {loadingRewards ? (
-                                        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-500" size={40} /></div>
+                                        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-teal-500" size={40} /></div>
                                     ) : rewards.length === 0 ? (
                                         <div className="p-16 flex flex-col items-center justify-center text-center">
                                             <ShoppingBag size={48} className="text-slate-700 mb-4" />
-                                            <h4 className="text-xl font-bold text-white mb-2">Store is Empty</h4>
+                                            <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Store is Empty</h4>
                                             <p className="text-slate-400">Add your first reward using the form.</p>
                                         </div>
                                     ) : (
                                         <div className="divide-y divide-slate-800/50 p-4 space-y-4 bg-[#1C2130]">
                                             {rewards.map(r => (
-                                                <div key={r.id} className="p-4 bg-[#161B28] rounded-xl border border-slate-700/50 hover:border-slate-600 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                <div key={r.id} className="p-4 bg-[#161B28] rounded-xl border border-slate-300 dark:border-slate-700/50 hover:border-slate-600 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-800 flex-shrink-0">
                                                             <img src={r.image || `https://picsum.photos/seed/${r.id}/200`} alt={r.name} className="w-full h-full object-cover" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-white text-lg">{r.name}</h4>
+                                                            <h4 className="font-bold text-slate-900 dark:text-white text-lg">{r.name}</h4>
                                                             <div className="flex items-center gap-3 mt-1">
                                                                 <span className="text-sm font-bold text-amber-500">{r.cost} pts</span>
                                                                 <span className="w-1 h-1 rounded-full bg-slate-600"></span>
-                                                                <span className="text-xs text-slate-400 px-2 py-0.5 rounded flex items-center bg-slate-800/50 border border-slate-700">{r.category}</span>
+                                                                <span className="text-xs text-slate-400 px-2 py-0.5 rounded flex items-center bg-slate-800/50 border border-slate-300 dark:border-slate-700">{r.category}</span>
                                                             </div>
                                                             {r.description && <p className="text-sm text-slate-500 mt-2 line-clamp-1">{r.description}</p>}
                                                         </div>
@@ -519,19 +515,19 @@ const FacultyDashboard: React.FC = () => {
                 {activeTab === 'dashboard' && (
                     <div className="space-y-8 animate-in fade-in duration-500">
                         <div>
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight">Overview Dashboard</h2>
+                            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Overview Dashboard</h2>
                             <p className="text-slate-400 mt-2">Manage all active platform content here.</p>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="bg-[#1C2130] border border-slate-800 rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <h3 className="font-bold text-white text-xl mb-6 flex items-center gap-3"><CalendarDays className="text-indigo-400" /> Existing Events ({events.length})</h3>
-                                {loadingEvents ? <div className="flex justify-center py-6"><Loader2 className="animate-spin text-indigo-500" /></div>
+                            <div className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl shadow-black/20">
+                                <h3 className="font-bold text-slate-900 dark:text-white text-xl mb-6 flex items-center gap-3"><CalendarDays className="text-teal-400" /> Existing Events ({events.length})</h3>
+                                {loadingEvents ? <div className="flex justify-center py-6"><Loader2 className="animate-spin text-teal-500" /></div>
                                     : <div className="space-y-4">
                                         {events.map(ev => (
-                                            <div key={ev.id} className="bg-[#161B28] rounded-xl p-4 border border-slate-700/50 flex justify-between items-center gap-4">
+                                            <div key={ev.id} className="bg-[#161B28] rounded-xl p-4 border border-slate-300 dark:border-slate-700/50 flex justify-between items-center gap-4">
                                                 <div>
-                                                    <p className="font-bold text-white">{ev.title}</p>
+                                                    <p className="font-bold text-slate-900 dark:text-white">{ev.title}</p>
                                                     <p className="text-xs text-slate-400 mt-1">{ev.category} • {ev.credits} pts</p>
                                                 </div>
                                                 <button onClick={() => handleDeleteEvent(ev.id)} className="text-slate-500 hover:text-red-400 transition"><Trash2 size={18} /></button>
@@ -541,15 +537,15 @@ const FacultyDashboard: React.FC = () => {
                                 }
                             </div>
 
-                            <div className="bg-[#1C2130] border border-slate-800 rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <h3 className="font-bold text-white text-xl mb-6 flex items-center gap-3"><ShoppingBag className="text-amber-400" /> Current Rewards ({rewards.length})</h3>
-                                {loadingRewards ? <div className="flex justify-center py-6"><Loader2 className="animate-spin text-indigo-500" /></div>
+                            <div className="bg-[#1C2130] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl shadow-black/20">
+                                <h3 className="font-bold text-slate-900 dark:text-white text-xl mb-6 flex items-center gap-3"><ShoppingBag className="text-amber-400" /> Current Rewards ({rewards.length})</h3>
+                                {loadingRewards ? <div className="flex justify-center py-6"><Loader2 className="animate-spin text-teal-500" /></div>
                                     : <div className="space-y-4">
                                         {rewards.map(r => (
-                                            <div key={r.id} className="bg-[#161B28] rounded-xl p-4 border border-slate-700/50 flex items-center gap-4">
+                                            <div key={r.id} className="bg-[#161B28] rounded-xl p-4 border border-slate-300 dark:border-slate-700/50 flex items-center gap-4">
                                                 {r.image && <img src={r.image} alt="reward" className="w-12 h-12 rounded-lg object-cover" />}
                                                 <div className="flex-1">
-                                                    <p className="font-bold text-white">{r.name}</p>
+                                                    <p className="font-bold text-slate-900 dark:text-white">{r.name}</p>
                                                     <p className="text-xs text-amber-500 font-bold mt-1">{r.cost} pts <span className="text-slate-500 font-normal">({r.category})</span></p>
                                                 </div>
                                             </div>
@@ -565,16 +561,16 @@ const FacultyDashboard: React.FC = () => {
                 {activeTab === 'leaderboard' && (
                     <div className="max-w-3xl animate-in fade-in duration-500">
                         <div className="mb-8">
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight">Student Leaderboard</h2>
+                            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Student Leaderboard</h2>
                             <p className="text-slate-400 mt-2">Top performers across the college.</p>
                         </div>
-                        {loadingLeaderboard ? <div className="flex justify-center py-12"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>
+                        {loadingLeaderboard ? <div className="flex justify-center py-12"><Loader2 className="animate-spin text-teal-500" size={32} /></div>
                             : (
-                                <div className="bg-[#1C2130] rounded-2xl border border-slate-800 overflow-hidden shadow-xl shadow-black/20">
+                                <div className="bg-[#1C2130] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xl shadow-black/20">
                                     {leaderboard.map((s, i) => {
                                         const rank = i + 1;
                                         return (
-                                            <div key={s.id} className={`flex items-center gap-4 px-6 py-5 border-b border-slate-800 last:border-0 ${rank <= 3 ? 'bg-amber-500/5' : ''}`}>
+                                            <div key={s.id} className={`flex items-center gap-4 px-6 py-5 border-b border-slate-200 dark:border-slate-800 last:border-0 ${rank <= 3 ? 'bg-amber-500/5' : ''}`}>
                                                 <div className="w-10 flex justify-center">
                                                     {rank === 1 ? <Crown size={24} className="text-amber-400 fill-amber-400" />
                                                         : rank === 2 ? <Medal size={24} className="text-slate-300 fill-slate-300" />
@@ -582,11 +578,11 @@ const FacultyDashboard: React.FC = () => {
                                                                 : <span className="font-bold text-slate-500 text-lg">#{rank}</span>}
                                                 </div>
                                                 <div className="flex items-center gap-4 flex-1">
-                                                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white overflow-hidden shadow-sm">
+                                                    <div className="w-10 h-10 rounded-full bg-teal-600-white overflow-hidden shadow-sm">
                                                         <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${s.name}&backgroundColor=4f46e5`} alt="avatar" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-white">{s.name}</p>
+                                                        <p className="font-bold text-slate-900 dark:text-white">{s.name}</p>
                                                     </div>
                                                 </div>
                                                 <span className="font-extrabold text-amber-500 text-lg">{s.totalCredits.toLocaleString()} <span className="text-sm font-semibold text-slate-500">pts</span></span>

@@ -34,5 +34,7 @@ export const registerForEvent = async (uid: string, event: Event): Promise<void>
         credits: event.credits,
         status: 'Upcoming',
         description: event.description,
+        skills: event.skills || { leadership: 0, creativity: 0, teamwork: 0, technical: 0, communication: 0 },
+        // Fallback added ^ in case old events don't have the skills object
     });
 };

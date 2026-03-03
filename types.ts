@@ -32,6 +32,7 @@ export interface Event {
   status: 'Upcoming' | 'Completed' | 'Verified';
   image: string;
   description: string;
+  skills: SkillMetrics;
 }
 
 export interface Reward {

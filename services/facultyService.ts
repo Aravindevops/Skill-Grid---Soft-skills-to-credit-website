@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
-import { Event, Reward } from '../types';
+import { Event, Reward, SkillMetrics } from '../types';
 
 // ─── Storage ───────────────────────────────────────────────
 
@@ -91,18 +91,30 @@ export const verifyStudentEvent = async (
     studentUid: string,
     eventId: string,
     credits: number,
-    skillKey: keyof { leadership: number; creativity: number; teamwork: number; technical: number; communication: number }
+    eventSkills?: SkillMetrics
 ): Promise<void> => {
     // Update the event status in the student's subcollection
     const eventRef = doc(db, 'users', studentUid, 'events', eventId);
     await updateDoc(eventRef, { status: 'Verified' });
 
-    // Add credits and bump skill on the student's main doc
+    // Add credits and bump skills on the student's main doc
     const userRef = doc(db, 'users', studentUid);
-    await updateDoc(userRef, {
-        totalCredits: increment(credits),
-        [`skills.${skillKey}`]: increment(10), // each verification adds 10 points to chosen skill
-    });
+    const updatePayload: Record<string, any> = {
+        totalCredits: increment(credits)
+    };
+
+    if (eventSkills) {
+        if (eventSkills.leadership) updatePayload['skills.leadership'] = increment(eventSkills.leadership);
+        if (eventSkills.creativity) updatePayload['skills.creativity'] = increment(eventSkills.creativity);
+        if (eventSkills.teamwork) updatePayload['skills.teamwork'] = increment(eventSkills.teamwork);
+        if (eventSkills.technical) updatePayload['skills.technical'] = increment(eventSkills.technical);
+        if (eventSkills.communication) updatePayload['skills.communication'] = increment(eventSkills.communication);
+    } else {
+        // Fallback for older events without a split: give 10 points to a default skill
+        updatePayload['skills.teamwork'] = increment(10);
+    }
+
+    await updateDoc(userRef, updatePayload);
 };
 
 /** Rejects / removes a student's pending event */

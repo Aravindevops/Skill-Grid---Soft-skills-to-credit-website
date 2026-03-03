@@ -99,19 +99,29 @@ export const updateUserProfile = async (
 /** Fetches top N users by totalCredits for the leaderboard */
 export const getLeaderboard = async (topN: number = 20): Promise<UserProfile[]> => {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('role', '==', UserRole.STUDENT), orderBy('totalCredits', 'desc'), limit(topN));
+    const q = query(usersRef, where('role', '==', UserRole.STUDENT));
     const snap = await getDocs(q);
-    return snap.docs.map((d, index) => ({
+
+    // Sort and limit in memory to avoid requiring a Firestore composite index
+    const students = snap.docs.map(d => ({
         id: d.id,
-        ...(d.data() as Omit<UserProfile, 'id'>),
-        rank: index + 1,
+        ...(d.data() as Omit<UserProfile, 'id'>)
     }));
+
+    return students
+        .sort((a, b) => (b.totalCredits || 0) - (a.totalCredits || 0))
+        .slice(0, topN)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
 };
 
 /** Fetches all students */
 export const getAllStudents = async (): Promise<UserProfile[]> => {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('role', '==', UserRole.STUDENT), orderBy('name'));
+    const q = query(usersRef, where('role', '==', UserRole.STUDENT));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<UserProfile, 'id'>) }));
+
+    // Sort in memory to avoid requiring a Firestore composite index
+    return snap.docs
+        .map(d => ({ id: d.id, ...(d.data() as Omit<UserProfile, 'id'>) }))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 };
