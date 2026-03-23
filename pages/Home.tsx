@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserEvents, getAllEvents, registerForEvent } from '../services/eventService';
 import { getAllRewards } from '../services/facultyService';
 import { Event, Reward } from '../types';
-import { Calendar, CheckCircle, ArrowRight, Activity, Award, Loader2 } from 'lucide-react';
+import { Calendar, CheckCircle, ArrowRight, Activity, Award, Loader2, BookOpen, GraduationCap } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { userProfile, isLoadingProfile } = useUser();
@@ -62,9 +62,23 @@ const Home: React.FC = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold mb-3">
               Welcome back, {displayName}!
             </h1>
+            {(userProfile?.college || userProfile?.course) && (
+              <div className="flex flex-wrap items-center gap-3 mb-5">
+                {userProfile.college && (
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-sm font-medium shadow-sm border border-white/20 text-indigo-50">
+                    <BookOpen size={14} className="text-amber-300" /> {userProfile.college}
+                  </span>
+                )}
+                {userProfile.course && (
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-sm font-medium shadow-sm border border-white/20 text-indigo-50">
+                    <GraduationCap size={14} className="text-amber-300" /> {userProfile.course}
+                  </span>
+                )}
+              </div>
+            )}
             <p className="text-indigo-100 text-lg max-w-2xl mb-8">
               {rank > 0
                 ? <>You are currently ranked <span className="font-bold text-amber-300">#{rank}</span> on the leaderboard. Keep participating in events to boost your scores!</>

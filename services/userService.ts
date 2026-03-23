@@ -23,6 +23,9 @@ export interface UserProfile {
     totalCredits: number;
     rank: number;
     skills: SkillMetrics;
+    college?: string;
+    course?: string;
+    year?: string;
     createdAt?: unknown;
 }
 

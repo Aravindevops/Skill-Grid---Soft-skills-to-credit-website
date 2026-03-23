@@ -14,6 +14,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { Event, Reward, SkillMetrics } from '../types';
+import { notifyAllStudents, createNotification } from './notificationService';
 
 // ─── Storage ───────────────────────────────────────────────
 
@@ -40,6 +41,13 @@ export const postEvent = async (
         ...event,
         createdAt: serverTimestamp(),
     });
+
+    // Notify all students about the new event
+    await notifyAllStudents({
+        title: `New Event: ${event.title}`,
+        message: `A new ${event.category.toLowerCase()} has been scheduled for ${new Date(event.date).toLocaleDateString()}. Earn up to ${event.credits} points!`,
+        type: 'event'
+    }).catch(console.error); // Do not block if notification fails
 };
 
 /** Deletes a global event */
@@ -60,6 +68,13 @@ export const addReward = async (
     reward: Omit<Reward, 'id'>
 ): Promise<void> => {
     await addDoc(collection(db, 'rewards'), reward);
+    
+    // Notify all students about the new reward
+    await notifyAllStudents({
+        title: `New Reward Available!`,
+        message: `The '${reward.name}' has been added to the store for ${reward.cost} credits. Grab it while it lasts!`,
+        type: 'reward'
+    }).catch(console.error);
 };
 
 /** Deletes a reward from the store */
@@ -115,6 +130,13 @@ export const verifyStudentEvent = async (
     }
 
     await updateDoc(userRef, updatePayload);
+
+    // Notify the specific student that their points have been verified
+    await createNotification(studentUid, {
+        title: `Points Verified: +${credits} pts`,
+        message: `Your attendance at the event has been officially verified by faculty. ${credits} points have been added to your account!`,
+        type: 'verification'
+    }).catch(console.error);
 };
 
 /** Rejects / removes a student's pending event */

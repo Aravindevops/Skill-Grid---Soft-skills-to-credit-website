@@ -43,3 +43,12 @@ export interface Reward {
   description: string;
   category: 'Merch' | 'Academic' | 'Voucher';
 }
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'event' | 'reward' | 'verification';
+  isRead: boolean;
+  date: string;
+}

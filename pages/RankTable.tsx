@@ -89,11 +89,28 @@ const RankTable: React.FC = () => {
                       )}
                       {rank === 1 && <div className="absolute -top-1 -right-1 bg-yellow-400 text-white p-0.5 rounded-full"><Crown size={10} /></div>}
                     </div>
-                    <div>
-                      <h3 className={clsx("font-bold text-lg", isMe ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-white")}>
+                    <div className="min-w-0 pr-4">
+                      <h3 className={clsx("font-bold text-lg truncate", isMe ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-white")} title={profile.name}>
                         {profile.name} {isMe && <span className="text-sm font-normal">(You)</span>}
                       </h3>
-                      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium capitalize">{profile.role?.toLowerCase() || 'Student'}</p>
+                      <div className="flex items-center gap-2 mt-0.5 whitespace-nowrap overflow-hidden">
+                        <p className="text-[11px] text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider flex-shrink-0">
+                          {profile.role?.toLowerCase() || 'student'}
+                        </p>
+                        {(profile.college || profile.course) && (
+                          <span className="text-gray-300 dark:text-slate-600 flex-shrink-0">•</span>
+                        )}
+                        {profile.college && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium truncate" title={profile.college}>
+                            {profile.college}
+                          </p>
+                        )}
+                        {profile.course && (
+                          <p className="text-xs text-gray-400 dark:text-slate-500 font-medium truncate" title={profile.course}>
+                            ({profile.course})
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="col-span-3 text-right">

@@ -11,6 +11,10 @@ import Signup from './pages/Signup';
 import FacultyLogin from './pages/faculty/FacultyLogin';
 import FacultySignup from './pages/faculty/FacultySignup';
 import FacultyDashboard from './pages/faculty/FacultyDashboard';
+import ProfileSettings from './pages/ProfileSettings';
+import Notifications from './pages/Notifications';
+import StudentDirectory from './pages/StudentDirectory';
+import PublicPortfolio from './pages/PublicPortfolio';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UserProvider } from './context/UserContext';
@@ -61,6 +65,18 @@ const FacultyPublicLayout = () => {
   return <Outlet />;
 };
 
+// Open layout (Visible to anyone, renders Navbar)
+const OpenLayout = () => {
+  return (
+    <UserProvider>
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Outlet />
+      </main>
+    </UserProvider>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -81,10 +97,18 @@ function App() {
                 <Route path="/faculty/signup" element={<FacultySignup />} />
               </Route>
 
+              {/* Public Directory (Open to all) */}
+              <Route element={<OpenLayout />}>
+                <Route path="/directory" element={<StudentDirectory />} />
+                <Route path="/portfolio/:uid" element={<PublicPortfolio />} />
+              </Route>
+
               {/* Student private */}
               <Route element={<PrivateLayout />}>
                 <Route path="/dashboard" element={<Home />} />
                 <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/rank-table" element={<RankTable />} />
                 <Route path="/rewards" element={<RewardStore />} />
                 <Route path="/about" element={<About />} />

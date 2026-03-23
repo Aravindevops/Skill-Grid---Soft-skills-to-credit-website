@@ -24,6 +24,7 @@ const Landing: React.FC = () => {
                     </div>
                     {/* Desktop Links */}
                     <div className="hidden md:flex flex-1 justify-center items-center gap-8">
+                        <Link to="/directory" className="text-base font-medium text-[#191A23] dark:text-[#B9FF66] hover:underline underline-offset-4 transition-colors">Student Directory</Link>
                         <Link to="/about" className="text-base font-medium text-[#191A23] dark:text-gray-300 hover:text-[#B9FF66] hover:underline underline-offset-4 transition-colors">About Us</Link>
                         <button onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })} className="text-base font-medium text-[#191A23] dark:text-gray-300 hover:text-[#B9FF66] hover:underline underline-offset-4 transition-colors">Services</button>
                         <button onClick={() => document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' })} className="text-base font-medium text-[#191A23] dark:text-gray-300 hover:text-[#B9FF66] hover:underline underline-offset-4 transition-colors">Working Process</button>
@@ -68,9 +69,9 @@ const Landing: React.FC = () => {
                                 <Link to="/signup" className="inline-block bg-[#191A23] dark:bg-[#B9FF66] text-white dark:text-[#191A23] px-8 py-5 rounded-[14px] font-medium text-lg hover:bg-gray-800 dark:hover:bg-[#a3e655] transition-colors shadow-lg">
                                     Get Started / Join the Grid
                                 </Link>
-                                <button onClick={() => document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' })} className="inline-block bg-white dark:bg-transparent text-[#191A23] dark:text-white border border-[#191A23] dark:border-gray-500 px-8 py-5 rounded-[14px] font-medium text-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
-                                    See How It Works
-                                </button>
+                                <Link to="/directory" className="inline-block bg-white dark:bg-transparent text-[#191A23] dark:text-white border border-[#191A23] dark:border-gray-500 px-8 py-5 rounded-[14px] font-medium text-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+                                    Browse Student Directory
+                                </Link>
                             </div>
                         </div>
                         {/* Hero Illustration Abstract */}
