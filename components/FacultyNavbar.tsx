@@ -4,6 +4,8 @@ import { GraduationCap, LogOut, Sun, Moon, LayoutGrid, CheckSquare, PlusSquare, 
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
+import { Logo } from './Logo';
+
 export type FacultyTab = 'dashboard' | 'verifications' | 'create_event' | 'rewards' | 'leaderboard';
 
 interface FacultyNavbarProps {
@@ -34,13 +36,11 @@ const FacultyNavbar: React.FC<FacultyNavbarProps> = ({ facultyName, activeTab, s
         <nav className="sticky top-0 z-50 bg-[#0B0F19] border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-20 items-center">
-                    {/* Logo (Original as requested) */}
+                    {/* Logo */}
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-teal-500/30">
-                            <span className="font-bold text-xl">S</span>
-                        </div>
+                        <Logo className="w-10 h-10 text-teal-400" />
                         <div>
-                            <span className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">SkillGrid</span>
+                            <span className="font-black text-xl text-slate-900 dark:text-white uppercase tracking-widest">SkillGrid</span>
                         </div>
                     </div>
 

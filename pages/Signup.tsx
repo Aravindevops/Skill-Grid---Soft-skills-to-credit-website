@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 const Signup: React.FC = () => {
   const [name, setName] = useState('');
@@ -40,8 +41,8 @@ const Signup: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-md p-8 border border-gray-100 dark:border-slate-700 transition-colors duration-300">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg">
-            S
+          <div className="w-12 h-12 mx-auto mb-4 text-indigo-600 dark:text-indigo-400">
+            <Logo className="w-full h-full" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Account</h1>
           <p className="text-gray-500 dark:text-slate-400 mt-2">Join SkillForge and track your growth</p>

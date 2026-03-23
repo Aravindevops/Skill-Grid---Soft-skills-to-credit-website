@@ -3,6 +3,7 @@ import { User, UserRole, Event, Reward } from './types';
 export const CURRENT_USER: User = {
   id: 'u1',
   name: 'Alwyn Reji',
+  email: 'alwyn@student.edu',
   role: UserRole.STUDENT,
   avatar: 'https://media.licdn.com/dms/image/v2/D5603AQFLBKeT04cvow/profile-displayphoto-crop_800_800/B56ZhfrHJnG0AY-/0/1753951794936?e=1772064000&v=beta&t=x9y09SuH18UOa1hS7H0e4txFvDCBgjcOwDcKyaQlt94',
   totalCredits: 1250,
@@ -33,7 +34,8 @@ export const EVENTS: Event[] = [
     credits: 100,
     status: 'Upcoming',
     image: 'https://picsum.photos/id/2/600/400',
-    description: 'Build the future of AI in this 24-hour intense coding marathon.'
+    description: 'Build the future of AI in this 24-hour intense coding marathon.',
+    skills: { leadership: 20, creativity: 50, teamwork: 40, technical: 80, communication: 30 }
   },
   {
     id: 'e2',
@@ -43,7 +45,8 @@ export const EVENTS: Event[] = [
     credits: 50,
     status: 'Verified',
     image: 'https://picsum.photos/id/3/600/400',
-    description: 'Learn from industry leaders about managing teams effectively.'
+    description: 'Learn from industry leaders about managing teams effectively.',
+    skills: { leadership: 80, creativity: 30, teamwork: 60, technical: 10, communication: 90 }
   },
   {
     id: 'e3',
@@ -53,7 +56,8 @@ export const EVENTS: Event[] = [
     credits: 30,
     status: 'Verified',
     image: 'https://picsum.photos/id/4/600/400',
-    description: 'Unleash your inner storyteller.'
+    description: 'Unleash your inner storyteller.',
+    skills: { leadership: 10, creativity: 90, teamwork: 30, technical: 0, communication: 80 }
   },
   {
     id: 'e4',
@@ -63,7 +67,8 @@ export const EVENTS: Event[] = [
     credits: 20,
     status: 'Upcoming',
     image: 'https://picsum.photos/id/6/600/400',
-    description: 'Weekly meetup to work on the Mars Rover project.'
+    description: 'Weekly meetup to work on the Mars Rover project.',
+    skills: { leadership: 30, creativity: 60, teamwork: 80, technical: 90, communication: 40 }
   }
 ];
 

@@ -6,6 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../context/UserContext';
 
+import { Logo } from './Logo';
+
 const Navbar: React.FC = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
@@ -14,7 +16,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: 'Home', path: '/', icon: Home },
+    { label: 'Home', path: '/dashboard', icon: Home },
     { label: 'Portfolio', path: '/portfolio', icon: User },
     { label: 'Reward Store', path: '/rewards', icon: ShoppingBag },
   ];
@@ -31,12 +33,10 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm">
-              S
-            </div>
-            <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">SkillGrid</span>
-          </div>
+          <Link to="/dashboard" className="flex-shrink-0 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+            <Logo className="w-8 h-8" />
+            <span className="font-black text-xl text-gray-900 dark:text-white uppercase tracking-widest">SkillGrid</span>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex space-x-8 items-center">

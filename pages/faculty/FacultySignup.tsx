@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, User, KeyRound, ArrowRight, Loader2, GraduationCap } from 'lucide-react';
+import { Logo } from '../../components/Logo';
 
 const FACULTY_CODE = import.meta.env.VITE_FACULTY_CODE || 'SKILLGRID2024';
 
@@ -42,8 +43,8 @@ const FacultySignup: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-slate-950 dark:to-slate-900">
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl w-full max-w-md p-8 border border-teal-100 dark:border-slate-700 transition-colors duration-300">
                 <div className="text-center mb-8">
-                    <div className="w-14 h-14 bg-teal-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-teal-500/30">
-                        <GraduationCap size={28} />
+                    <div className="w-14 h-14 mx-auto mb-4 text-teal-600 dark:text-teal-400">
+                        <Logo className="w-full h-full" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Faculty Registration</h1>
                     <p className="text-gray-500 dark:text-slate-400 mt-2">Create your faculty account</p>

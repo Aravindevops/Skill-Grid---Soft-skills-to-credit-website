@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 import Portfolio from './pages/Portfolio';
 import RankTable from './pages/RankTable';
 import RewardStore from './pages/RewardStore';
@@ -48,7 +49,7 @@ const FacultyLayout = () => {
 const PublicLayout = () => {
   const { isAuthenticated, isLoading, userRole } = useAuth();
   if (isLoading) return <div className="min-h-screen flex items-center justify-center dark:bg-slate-950 dark:text-white">Loading...</div>;
-  if (isAuthenticated) return <Navigate to={userRole === UserRole.FACULTY ? '/faculty' : '/'} replace />;
+  if (isAuthenticated) return <Navigate to={userRole === UserRole.FACULTY ? '/faculty' : '/dashboard'} replace />;
   return <Outlet />;
 };
 
@@ -69,6 +70,7 @@ function App() {
             <Routes>
               {/* Student public */}
               <Route element={<PublicLayout />}>
+                <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
               </Route>
@@ -81,7 +83,7 @@ function App() {
 
               {/* Student private */}
               <Route element={<PrivateLayout />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<Home />} />
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/rank-table" element={<RankTable />} />
                 <Route path="/rewards" element={<RewardStore />} />
@@ -94,7 +96,7 @@ function App() {
                 <Route path="/faculty" element={<FacultyDashboard />} />
               </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>
         </Router>
